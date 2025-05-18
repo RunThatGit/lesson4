@@ -1,0 +1,28 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      node-version: 16
+
+  build_and_publish:
+    needs: test
+    uses: ./.github/workflows/reusable-docker-build.yml
+    with:
+      docker-image: myorg/myapp
+      docker-tag: ${{ github.sha }}
+
+  deploy:
+    needs: build_and_publish
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      kube-context: my-k8s-cluster
+      docker-image: myorg/myapp
+      docker-tag: ${{ github.sha }}
